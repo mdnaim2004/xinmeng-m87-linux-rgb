@@ -7,14 +7,14 @@
 #   sudo usermod -aG input $USER
 # Log out and back in (or reboot).
 
+# Limit access to hidraw device nodes used by the keyboard software.
+# For tighter scoping, replace these vendor-only matches with exact
+# supported VID/PID pairs when the product IDs are known.
 # Sinowealth VID 0x258A (covers most Xinmeng M87 variants)
-SUBSYSTEM=="hidraw", ATTRS{idVendor}=="258a", GROUP="input", MODE="0660"
-SUBSYSTEM=="usb",    ATTRS{idVendor}=="258a", GROUP="input", MODE="0660"
+KERNEL=="hidraw*", SUBSYSTEM=="hidraw", ATTRS{idVendor}=="258a", GROUP="input", MODE="0660"
 
 # Winbond/Generalplus VID 0x0416
-SUBSYSTEM=="hidraw", ATTRS{idVendor}=="0416", GROUP="input", MODE="0660"
-SUBSYSTEM=="usb",    ATTRS{idVendor}=="0416", GROUP="input", MODE="0660"
+KERNEL=="hidraw*", SUBSYSTEM=="hidraw", ATTRS{idVendor}=="0416", GROUP="input", MODE="0660"
 
 # VID 0x3151
-SUBSYSTEM=="hidraw", ATTRS{idVendor}=="3151", GROUP="input", MODE="0660"
-SUBSYSTEM=="usb",    ATTRS{idVendor}=="3151", GROUP="input", MODE="0660"
+KERNEL=="hidraw*", SUBSYSTEM=="hidraw", ATTRS{idVendor}=="3151", GROUP="input", MODE="0660"

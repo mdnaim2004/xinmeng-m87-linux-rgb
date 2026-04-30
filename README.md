@@ -73,7 +73,8 @@ g++ -std=c++17 -O2 xinmeng_rgb.cpp $(pkg-config --libs --cflags hidapi-hidraw) -
 ./xinmeng_rgb effect --list            # List all effects
 
 ./xinmeng_rgb send "04 01 00 00 ff..." # Send raw 64-byte HID report
-./xinmeng_rgb replay <json_file>       # Replay captured packets from JSON
+./xinmeng_rgb replay <json_file>                   # Replay captured packets from JSON
+./xinmeng_rgb replay <json_file> --label <filter>  # Replay only packets whose label matches filter
 ./xinmeng_rgb guide                    # Show Windows USB capture guide
 ```
 
@@ -186,4 +187,4 @@ The compiled binary is otherwise fully standalone — no Python, no virtual envi
 
 ## License
 
-MIT – Free to use, modify, and share.
+MIT – Free to use, modify, and share. See [LICENSE](LICENSE) for the full text.
