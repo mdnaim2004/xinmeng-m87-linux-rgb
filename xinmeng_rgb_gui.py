@@ -329,9 +329,7 @@ class RGBApp(tk.Tk):
             row=1, column=1, sticky="w", padx=(2, 8), pady=(0, 6))
 
         # clicking anywhere on the card selects this effect
-        for widget in (card,):
-            widget.bind("<Button-1>",
-                        lambda _e, i=idx: self._select_effect(i))
+        card.bind("<Button-1>", lambda _e, i=idx: self._select_effect(i))
 
         self._effect_cards.append(card)
         return card
@@ -465,11 +463,7 @@ class RGBApp(tk.Tk):
             state="normal", text="✔  Apply Effect"))
 
     def _set_status(self, msg: str, error: bool = False):
-        colour = ERROR if error else FG2
         self.after(0, lambda: self._status_var.set(msg))
-        self.after(0, lambda: self.nametowidget(
-            self.winfo_children()[-1].winfo_name()  # status bar
-        ).configure(fg=colour) if False else None)   # placeholder; colour via tk var
 
     # ------------------------------------------------------------------ style
 
