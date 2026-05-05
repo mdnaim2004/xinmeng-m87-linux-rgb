@@ -21,7 +21,7 @@ echo ""
 # ── 1. System packages ────────────────────────────────────────────────────────
 echo "[1/4] Installing build dependencies…"
 sudo apt-get update -qq
-sudo apt-get install -y g++ make pkg-config libhidapi-dev libhidapi-hidraw0
+sudo apt-get install -y g++ make pkg-config libhidapi-dev libhidapi-hidraw0 python3 python3-tk
 
 # ── 2. Build ──────────────────────────────────────────────────────────────────
 echo "[2/4] Building xinmeng_rgb binary…"
@@ -51,7 +51,10 @@ echo "║                                                          ║"
 echo "║  IMPORTANT: Log out and log back in (or reboot) so      ║"
 echo "║  the 'input' group change takes effect.                  ║"
 echo "║                                                          ║"
-echo "║  Quick start (from this directory):                      ║"
+echo "║  Launch the GUI (recommended):                           ║"
+echo "║    python3 xinmeng_rgb_gui.py                            ║"
+echo "║                                                          ║"
+echo "║  Command-line (advanced):                                ║"
 echo "║    ./xinmeng_rgb detect                                  ║"
 echo "║    ./xinmeng_rgb effect static --colour 255,0,0          ║"
 echo "║    ./xinmeng_rgb effect breathing --colour 0,128,255     ║"
