@@ -2,7 +2,9 @@
 
 A standalone C++ tool to control RGB lighting on the **Xinmeng M87 / M87 Pro** keyboard on **Linux** (Ubuntu, Linux Mint, Debian, etc.).
 
-Written in **C++17** using **libhidapi** — no Python, no virtual environment, no extra runtime required.
+Includes a **graphical user interface (GUI)** — no need to type commands!
+
+Written in **C++17** using **libhidapi** — no Python virtual environment or extra runtime required.
 
 ---
 
@@ -11,6 +13,7 @@ Written in **C++17** using **libhidapi** — no Python, no virtual environment, 
 ```
 xinmeng-m87-linux-rgb/
 ├── xinmeng_rgb.cpp          ← C++ source (single file, all features)
+├── xinmeng_rgb_gui.py       ← Python/tkinter GUI (graphical interface)
 ├── Makefile                 ← Build system
 ├── install.sh               ← One-shot installer (build + udev + group)
 ├── 99-xinmeng-m87.rules     ← udev rule (keyboard access without sudo)
@@ -30,13 +33,66 @@ bash install.sh
 
 Then **log out and back in** (or reboot) so the `input` group change takes effect.
 
-### 2. Detect your keyboard
+### 2. Launch the GUI
+
+```bash
+python3 xinmeng_rgb_gui.py
+```
+
+Or use the Makefile shortcut:
+
+```bash
+make gui
+```
+
+The GUI will:
+- Automatically detect your keyboard on startup
+- Let you choose an RGB effect with a single click
+- Provide RGB colour sliders and a colour picker dialog
+- Let you adjust speed and brightness with sliders
+- Apply the effect with one button press
+
+---
+
+## GUI Screenshot
+
+```
+┌─────────────────────────────────────────────┐
+│  ⌨  Xinmeng M87 RGB Controller              │
+│  Linux Edition                              │
+├─────────────────────────────────────────────┤
+│  Keyboard Status                            │
+│  ● Xinmeng M87 (Sinowealth)   [Re-detect]  │
+├─────────────────────────────────────────────┤
+│  RGB Effect                                 │
+│  ○ Static   ○ Breathing  ○ Wave            │
+│  ○ Rainbow  ○ Reactive   ○ Ripple          │
+│  ○ Neon     ○ Starlight  ○ Off             │
+├─────────────────────────────────────────────┤
+│  Colour                                     │
+│  R ──────────────────── 255                 │
+│  G ──────────────────── 0                   │
+│  B ──────────────────── 0                   │
+│  ■ #FF0000          [Pick colour…]          │
+├─────────────────────────────────────────────┤
+│  Speed      Slowest ──────────── Fastest    │
+│  Brightness Off     ──────────── Full       │
+├─────────────────────────────────────────────┤
+│          [ ✔  Apply Effect ]               │
+└─────────────────────────────────────────────┘
+```
+
+---
+
+## Command-Line Usage (Advanced)
+
+### Detect your keyboard
 
 ```bash
 ./xinmeng_rgb detect
 ```
 
-### 3. Apply an RGB effect
+### Apply an RGB effect
 
 ```bash
 ./xinmeng_rgb effect static --colour 255,0,0          # Solid red
@@ -51,13 +107,16 @@ Then **log out and back in** (or reboot) so the `input` group change takes effec
 ## Building Manually
 
 ```bash
-# Install dependency
-sudo apt install libhidapi-dev libhidapi-hidraw0
+# Install dependencies
+sudo apt install libhidapi-dev libhidapi-hidraw0 python3 python3-tk
 
 # Build
 make
 
-# Or manually:
+# Launch GUI
+python3 xinmeng_rgb_gui.py
+
+# Or manually build:
 g++ -std=c++17 -O2 xinmeng_rgb.cpp $(pkg-config --libs --cflags hidapi-hidraw) -o xinmeng_rgb
 ```
 
@@ -174,13 +233,15 @@ Run `./xinmeng_rgb guide` for step-by-step instructions.
 
 ---
 
-## Runtime Dependency
+## Runtime Dependencies
 
-| Library | Purpose | Install |
-|---------|---------|---------|
+| Library / Tool | Purpose | Install |
+|----------------|---------|---------|
 | `libhidapi-hidraw0` | HID device communication | `sudo apt install libhidapi-hidraw0` |
+| `python3` | GUI launcher | `sudo apt install python3` |
+| `python3-tk` | GUI toolkit (tkinter) | `sudo apt install python3-tk` |
 
-The compiled binary is otherwise fully standalone — no Python, no virtual environment.
+The compiled binary is otherwise fully standalone — no Python virtual environment needed.
 
 ---
 

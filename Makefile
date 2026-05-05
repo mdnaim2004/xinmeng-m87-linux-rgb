@@ -2,6 +2,7 @@
 #
 # Usage:
 #   make              – build the binary
+#   make gui          – launch the GUI
 #   make clean        – remove build artefacts
 #   make install      – copy binary to /usr/local/bin (needs sudo)
 #   make uninstall    – remove installed binary
@@ -16,7 +17,7 @@ SRC     = xinmeng_rgb.cpp
 
 PREFIX  ?= /usr/local
 
-.PHONY: all clean install uninstall
+.PHONY: all clean install uninstall gui
 
 all: $(TARGET)
 
@@ -25,12 +26,18 @@ $(TARGET): $(SRC)
 	@echo ""
 	@echo "  Build successful!  Binary: ./$(TARGET)"
 	@echo ""
-	@echo "  Quick start:"
+	@echo "  Launch GUI (recommended):"
+	@echo "    python3 xinmeng_rgb_gui.py"
+	@echo ""
+	@echo "  Command-line:"
 	@echo "    ./$(TARGET) detect"
 	@echo "    ./$(TARGET) effect static --colour 255,0,0"
 	@echo "    ./$(TARGET) effect wave"
 	@echo "    ./$(TARGET) effect off"
 	@echo ""
+
+gui: $(TARGET)
+	python3 xinmeng_rgb_gui.py
 
 clean:
 	rm -f $(TARGET)
