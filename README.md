@@ -13,6 +13,7 @@ xinmeng-m87-linux-rgb/
 ├── xinmeng_rgb.cpp          ← C++ source (single file, all features)
 ├── Makefile                 ← Build system
 ├── install.sh               ← One-shot installer (build + udev + group)
+├── ui.sh                    ← Interactive terminal UI
 ├── 99-xinmeng-m87.rules     ← udev rule (keyboard access without sudo)
 ├── 20240301154823_2169.zip  ← Official Windows driver (for packet capture)
 └── README.md
@@ -45,6 +46,20 @@ Then **log out and back in** (or reboot) so the `input` group change takes effec
 ./xinmeng_rgb effect rainbow                           # Colour cycle
 ./xinmeng_rgb effect off                               # Lights off
 ```
+
+### 4. Interactive UI (full control)
+
+```bash
+bash ui.sh
+```
+
+The UI includes:
+- device detection
+- effect picker menu
+- RGB / HEX colour input
+- speed and brightness control
+- optional VID/PID override
+- one-click apply and instant off
 
 ---
 
