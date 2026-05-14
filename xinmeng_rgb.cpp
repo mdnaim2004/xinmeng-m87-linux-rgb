@@ -91,6 +91,7 @@ static constexpr uint8_t MODE_RIPPLE    = 0x04;
 static constexpr uint8_t MODE_NEON      = 0x05;
 static constexpr uint8_t MODE_FLICKER   = 0x06;
 static constexpr uint8_t MODE_STARLIGHT = 0x07;
+// Best-guess protocol mapping: music mode uses the same mode byte as flicker.
 static constexpr uint8_t MODE_MUSIC     = MODE_FLICKER;
 static constexpr uint8_t MODE_OFF       = 0xFF;
 
@@ -588,7 +589,7 @@ static const EffectEntry EFFECTS[] = {
     {"static",    "Solid single colour (use --colour R,G,B)",            effect_static},
     {"breathing", "Fade in/out on a colour (use --colour R,G,B)",        effect_breathing},
     {"wave",      "Rainbow wave across keyboard",                         effect_wave},
-    {"music",     "Music wave flow (speed/brightness controlled)",        effect_music},
+    {"music",     "Music-reactive wave flow (best-guess protocol mode)",  effect_music},
     {"rainbow",   "Full-spectrum colour cycle",                           effect_rainbow},
     {"reactive",  "Light up on keypress (use --colour R,G,B)",           effect_reactive},
     {"ripple",    "Ripple from keypress (use --colour R,G,B)",           effect_ripple},

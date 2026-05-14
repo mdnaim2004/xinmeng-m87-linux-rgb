@@ -102,7 +102,7 @@ g++ -std=c++17 -O2 xinmeng_rgb.cpp $(pkg-config --libs --cflags hidapi-hidraw) -
 | `static`     | Solid single colour |
 | `breathing`  | Fade in/out |
 | `wave`       | Rainbow wave |
-| `music`      | Music wave flow (supports speed/brightness control) |
+| `music`      | Music-reactive wave flow (best-guess protocol mode) |
 | `rainbow`    | Colour cycle |
 | `reactive`   | Light up on keypress |
 | `ripple`     | Ripple from keypress |
