@@ -101,7 +101,7 @@ list_effects() {
 pick_effect() {
   print_banner
   echo "Select an effect:"
-  local options=(static breathing wave rainbow reactive ripple neon starlight off back)
+  local options=(static breathing wave music rainbow reactive ripple neon starlight off back)
   select choice in "${options[@]}"; do
     if [[ -z "${choice:-}" ]]; then
       echo "Invalid selection."

@@ -43,6 +43,7 @@ Then **log out and back in** (or reboot) so the `input` group change takes effec
 ./xinmeng_rgb effect static --colour 255,0,0          # Solid red
 ./xinmeng_rgb effect breathing --colour 0,128,255      # Blue breathing
 ./xinmeng_rgb effect wave                              # Rainbow wave
+./xinmeng_rgb effect music --speed 1 --brightness 4    # Music wave flow control
 ./xinmeng_rgb effect rainbow                           # Colour cycle
 ./xinmeng_rgb effect off                               # Lights off
 ```
@@ -101,6 +102,7 @@ g++ -std=c++17 -O2 xinmeng_rgb.cpp $(pkg-config --libs --cflags hidapi-hidraw) -
 | `static`     | Solid single colour |
 | `breathing`  | Fade in/out |
 | `wave`       | Rainbow wave |
+| `music`      | Music wave flow (supports speed/brightness control) |
 | `rainbow`    | Colour cycle |
 | `reactive`   | Light up on keypress |
 | `ripple`     | Ripple from keypress |
@@ -112,6 +114,7 @@ g++ -std=c++17 -O2 xinmeng_rgb.cpp $(pkg-config --libs --cflags hidapi-hidraw) -
 ./xinmeng_rgb effect static --colour 255,165,0        # Orange
 ./xinmeng_rgb effect breathing --hex-colour 00ff88    # Teal breathing
 ./xinmeng_rgb effect wave --speed 0 --brightness 4   # Fast wave, full bright
+./xinmeng_rgb effect music --speed 1 --brightness 4  # Music wave flow control
 ./xinmeng_rgb effect static --colour 255,0,0 --vid 0x258A --pid 0x002A
 ```
 

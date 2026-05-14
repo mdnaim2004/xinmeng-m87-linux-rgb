@@ -14,6 +14,7 @@
  *   ./xinmeng_rgb effect static --colour 255,0,0
  *   ./xinmeng_rgb effect breathing --colour 0,128,255
  *   ./xinmeng_rgb effect wave
+ *   ./xinmeng_rgb effect music --speed 1 --brightness 4
  *   ./xinmeng_rgb effect off
  *   ./xinmeng_rgb send 04010000ff000000
  *   ./xinmeng_rgb guide
@@ -90,6 +91,7 @@ static constexpr uint8_t MODE_RIPPLE    = 0x04;
 static constexpr uint8_t MODE_NEON      = 0x05;
 static constexpr uint8_t MODE_FLICKER   = 0x06;
 static constexpr uint8_t MODE_STARLIGHT = 0x07;
+static constexpr uint8_t MODE_MUSIC     = MODE_FLICKER;
 static constexpr uint8_t MODE_OFF       = 0xFF;
 
 // ============================================================================
@@ -526,6 +528,15 @@ static std::vector<Report> effect_wave(const EffectArgs& a) {
     };
 }
 
+static std::vector<Report> effect_music(const EffectArgs& a) {
+    return {
+        build_set_mode(MODE_MUSIC),
+        build_set_speed(a.speed),
+        build_set_brightness(a.brightness),
+        build_commit(),
+    };
+}
+
 static std::vector<Report> effect_rainbow(const EffectArgs& a) {
     return effect_wave(a);
 }
@@ -577,6 +588,7 @@ static const EffectEntry EFFECTS[] = {
     {"static",    "Solid single colour (use --colour R,G,B)",            effect_static},
     {"breathing", "Fade in/out on a colour (use --colour R,G,B)",        effect_breathing},
     {"wave",      "Rainbow wave across keyboard",                         effect_wave},
+    {"music",     "Music wave flow (speed/brightness controlled)",        effect_music},
     {"rainbow",   "Full-spectrum colour cycle",                           effect_rainbow},
     {"reactive",  "Light up on keypress (use --colour R,G,B)",           effect_reactive},
     {"ripple",    "Ripple from keypress (use --colour R,G,B)",           effect_ripple},
@@ -839,6 +851,7 @@ Examples:
   %s effect static --colour 255,0,0
   %s effect breathing --colour 0,128,255 --speed 1
   %s effect wave --brightness 3
+  %s effect music --speed 0 --brightness 4
   %s effect rainbow
   %s effect off
   %s send "04 01 00 00 ff 00 00 00"
@@ -846,7 +859,7 @@ Examples:
   %s guide
 
 Available effects:
-)", prog, prog, prog, prog, prog, prog, prog, prog, prog, prog);
+)", prog, prog, prog, prog, prog, prog, prog, prog, prog, prog, prog);
     list_effects();
 }
 
