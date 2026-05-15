@@ -17,7 +17,7 @@ print_banner() {
   clear || true
   cat <<'EOF'
 ╔══════════════════════════════════════════════════════════╗
-║            Xinmeng M87 RGB Control - UI                 ║
+║   ✨ Xinmeng M87 RGB Control - Interactive UI ✨         ║
 ╚══════════════════════════════════════════════════════════╝
 EOF
   echo "Current profile: effect=$EFFECT colour=$COLOUR speed=$SPEED brightness=$BRIGHTNESS"
@@ -200,6 +200,17 @@ run_off_now() {
   apply_effect
 }
 
+run_music_mode() {
+  local cmd=("$BIN" music)
+  if [[ -n "$VID" && -n "$PID" ]]; then
+    cmd+=(--vid "$VID" --pid "$PID")
+  fi
+  echo
+  echo "[*] Starting music mode. Press Ctrl+C to stop."
+  "${cmd[@]}" || true
+  read -r -p "Press Enter to continue..." _
+}
+
 main_menu() {
   while true; do
     print_banner
@@ -215,6 +226,7 @@ main_menu() {
 9) Clear VID/PID override
 10) Apply current profile
 11) Turn RGB off now
+12) Start music reactive mode
 0) Exit
 EOF
     echo
@@ -231,6 +243,7 @@ EOF
       9) clear_device_override ;;
       10) apply_effect ;;
       11) run_off_now ;;
+      12) run_music_mode ;;
       0) echo "Bye."; exit 0 ;;
       *) echo "Invalid option."; read -r -p "Press Enter to continue..." _ ;;
     esac

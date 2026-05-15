@@ -27,9 +27,16 @@
  *   sudo udevadm control --reload-rules && sudo udevadm trigger
  */
 
+#if __has_include(<hidapi/hidapi.h>)
 #include <hidapi/hidapi.h>
+#elif __has_include(<hidapi.h>)
+#include <hidapi.h>
+#else
+#error "hidapi header not found. Install libhidapi development package."
+#endif
 
 #include <algorithm>
+#include <array>
 #include <chrono>
 #include <cmath>
 #include <cstdint>
@@ -44,6 +51,9 @@
 #include <sstream>
 #include <string>
 #include <thread>
+#include <atomic>
+#include <csignal>
+#include <unistd.h>
 #include <vector>
 
 // ============================================================================
@@ -649,6 +659,114 @@ static int cmd_effect(const std::string& effect_name, EffectArgs args) {
 }
 
 // ============================================================================
+// Music reactive mode (microphone amplitude -> colour/brightness)
+// ============================================================================
+
+static std::atomic<bool> g_music_stop{false};
+
+static void on_sigint([[maybe_unused]] int signum) {
+    g_music_stop = true;
+}
+
+static bool command_exists(const std::string& name) {
+    const char* path_env = std::getenv("PATH");
+    if (!path_env) return false;
+    std::string path(path_env);
+    std::stringstream ss(path);
+    std::string dir;
+    while (std::getline(ss, dir, ':')) {
+        if (dir.empty()) continue;
+        std::filesystem::path p = std::filesystem::path(dir) / name;
+        if (std::filesystem::exists(p) && access(p.c_str(), X_OK) == 0) return true;
+    }
+    return false;
+}
+
+static void hsv_to_rgb(float h, float s, float v, uint8_t& r, uint8_t& g, uint8_t& b) {
+    float c = v * s;
+    float hh = h / 60.0f;
+    float x = c * (1.0f - std::fabs(std::fmod(hh, 2.0f) - 1.0f));
+    float m = v - c;
+    float rf = 0.0f, gf = 0.0f, bf = 0.0f;
+
+    if (0.0f <= hh && hh < 1.0f)      { rf = c; gf = x; bf = 0.0f; }
+    else if (1.0f <= hh && hh < 2.0f) { rf = x; gf = c; bf = 0.0f; }
+    else if (2.0f <= hh && hh < 3.0f) { rf = 0.0f; gf = c; bf = x; }
+    else if (3.0f <= hh && hh < 4.0f) { rf = 0.0f; gf = x; bf = c; }
+    else if (4.0f <= hh && hh < 5.0f) { rf = x; gf = 0.0f; bf = c; }
+    else                               { rf = c; gf = 0.0f; bf = x; }
+
+    r = static_cast<uint8_t>((rf + m) * 255.0f);
+    g = static_cast<uint8_t>((gf + m) * 255.0f);
+    b = static_cast<uint8_t>((bf + m) * 255.0f);
+}
+
+static int cmd_music(uint16_t vid = 0, uint16_t pid = 0, unsigned interval_ms = 80) {
+    if (!command_exists("arecord")) {
+        std::cerr << "[ERROR] 'arecord' not found.\n"
+                  << "        Install ALSA utils (package name usually: alsa-utils).\n";
+        return 1;
+    }
+    if (vid == 0 || pid == 0) {
+        if (!load_device_json(vid, pid)) {
+            std::cerr << "[ERROR] No device info found. Run './xinmeng_rgb detect' first.\n";
+            return 1;
+        }
+    }
+
+    M87HIDDevice dev(vid, pid);
+    if (!dev.open()) return 1;
+
+    std::signal(SIGINT, on_sigint);
+    std::cout << "[*] Music mode started. Press Ctrl+C to stop.\n";
+    std::cout << "    Reading microphone audio from ALSA via arecord...\n";
+
+    FILE* audio = popen("arecord -q -f S16_LE -c 1 -r 8000 -t raw", "r");
+    if (!audio) {
+        std::cerr << "[ERROR] Failed to start arecord.\n";
+        return 1;
+    }
+
+    constexpr size_t SAMPLE_COUNT = 512;
+    std::array<int16_t, SAMPLE_COUNT> samples{};
+    float hue = 0.0f;
+
+    while (!g_music_stop) {
+        size_t got = std::fread(samples.data(), sizeof(int16_t), SAMPLE_COUNT, audio);
+        if (got == 0) break;
+
+        double sum_sq = 0.0;
+        for (size_t i = 0; i < got; i++) {
+            double s = static_cast<double>(samples[i]);
+            sum_sq += s * s;
+        }
+        double rms = std::sqrt(sum_sq / static_cast<double>(got));
+        float level = static_cast<float>(std::min(1.0, rms / 12000.0));
+
+        uint8_t brightness = static_cast<uint8_t>(std::clamp(static_cast<int>(1 + std::round(level * 3.0f)), 1, 4));
+        uint8_t r = 0, g = 0, b = 0;
+        hsv_to_rgb(hue, 1.0f, std::max(0.2f, level), r, g, b);
+
+        if (!dev.send_all({
+            build_set_mode(MODE_STATIC, r, g, b),
+            build_set_brightness(brightness),
+            build_commit()
+        }, 5)) {
+            pclose(audio);
+            return 1;
+        }
+
+        hue += std::max(1.0f, level * 12.0f);
+        if (hue >= 360.0f) hue -= 360.0f;
+        std::this_thread::sleep_for(std::chrono::milliseconds(interval_ms));
+    }
+
+    pclose(audio);
+    std::cout << "[*] Music mode stopped.\n";
+    return 0;
+}
+
+// ============================================================================
 // Phase 4 – send raw HID report
 // ============================================================================
 
@@ -832,6 +950,11 @@ Commands:
     --vid 0xXXXX           Override Vendor ID
     --pid 0xXXXX           Override Product ID
 
+  music                    Run microphone-reactive RGB mode
+    --interval-ms <N>      Refresh interval in milliseconds (default: 80)
+    --vid 0xXXXX           Override Vendor ID
+    --pid 0xXXXX           Override Product ID
+
   guide                    Show Windows USB packet capture guide
 
 Examples:
@@ -841,12 +964,13 @@ Examples:
   %s effect wave --brightness 3
   %s effect rainbow
   %s effect off
+  %s music
   %s send "04 01 00 00 ff 00 00 00"
   %s replay packets/decoded_commands.json
   %s guide
 
 Available effects:
-)", prog, prog, prog, prog, prog, prog, prog, prog, prog, prog);
+)", prog, prog, prog, prog, prog, prog, prog, prog, prog, prog, prog);
     list_effects();
 }
 
@@ -937,9 +1061,21 @@ int main(int argc, char** argv) {
             } else if (a == "--hex-colour" || a == "--hex-color") {
                 hex_colour_str = next_arg(i, argc, argv, a.c_str());
             } else if (a == "--speed") {
-                args.speed = static_cast<uint8_t>(std::atoi(next_arg(i, argc, argv, "--speed").c_str()));
+                int v = std::atoi(next_arg(i, argc, argv, "--speed").c_str());
+                if (v < 0 || v > 4) {
+                    std::cerr << "[ERROR] --speed must be in range 0..4\n";
+                    ret = 1;
+                } else {
+                    args.speed = static_cast<uint8_t>(v);
+                }
             } else if (a == "--brightness") {
-                args.brightness = static_cast<uint8_t>(std::atoi(next_arg(i, argc, argv, "--brightness").c_str()));
+                int v = std::atoi(next_arg(i, argc, argv, "--brightness").c_str());
+                if (v < 0 || v > 4) {
+                    std::cerr << "[ERROR] --brightness must be in range 0..4\n";
+                    ret = 1;
+                } else {
+                    args.brightness = static_cast<uint8_t>(v);
+                }
             } else if (a == "--vid") {
                 args.vid = parse_vid_pid(next_arg(i, argc, argv, "--vid"), "VID");
             } else if (a == "--pid") {
@@ -1001,6 +1137,30 @@ int main(int argc, char** argv) {
             else if (a == "--pid")   pid = parse_vid_pid(next_arg(i, argc, argv, "--pid"), "PID");
         }
         ret = cmd_replay(json_path, label_filter, vid, pid);
+
+    // ------------------------------------------------------------------
+    // music
+    // ------------------------------------------------------------------
+    } else if (cmd == "music") {
+        uint16_t vid = 0, pid = 0;
+        unsigned interval_ms = 80;
+        for (int i = 2; i < argc; i++) {
+            std::string a = argv[i];
+            if (a == "--vid") vid = parse_vid_pid(next_arg(i, argc, argv, "--vid"), "VID");
+            else if (a == "--pid") pid = parse_vid_pid(next_arg(i, argc, argv, "--pid"), "PID");
+            else if (a == "--interval-ms") {
+                int v = std::atoi(next_arg(i, argc, argv, "--interval-ms").c_str());
+                if (v < 10 || v > 2000) {
+                    std::cerr << "[ERROR] --interval-ms must be in range 10..2000\n";
+                    ret = 1;
+                } else {
+                    interval_ms = static_cast<unsigned>(v);
+                }
+            } else {
+                std::fprintf(stderr, "[WARN] Unknown option: %s\n", a.c_str());
+            }
+        }
+        if (!ret) ret = cmd_music(vid, pid, interval_ms);
 
     // ------------------------------------------------------------------
     // guide

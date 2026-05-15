@@ -18,10 +18,26 @@ echo "║   Xinmeng M87 Linux RGB – C++ Installer                 ║"
 echo "╚══════════════════════════════════════════════════════════╝"
 echo ""
 
+install_packages() {
+  if command -v apt-get >/dev/null 2>&1; then
+    sudo apt-get update -qq
+    sudo apt-get install -y g++ make pkg-config libhidapi-dev libhidapi-hidraw0 alsa-utils
+  elif command -v dnf >/dev/null 2>&1; then
+    sudo dnf install -y gcc-c++ make pkgconf-pkg-config hidapi-devel alsa-utils
+  elif command -v pacman >/dev/null 2>&1; then
+    sudo pacman -Sy --noconfirm gcc make pkgconf hidapi alsa-utils
+  elif command -v zypper >/dev/null 2>&1; then
+    sudo zypper install -y gcc-c++ make pkg-config hidapi-devel alsa-utils
+  else
+    echo "[ERROR] Unsupported distro package manager."
+    echo "Install manually: C++ compiler, make, pkg-config, hidapi development package, alsa-utils."
+    exit 1
+  fi
+}
+
 # ── 1. System packages ────────────────────────────────────────────────────────
 echo "[1/4] Installing build dependencies…"
-sudo apt-get update -qq
-sudo apt-get install -y g++ make pkg-config libhidapi-dev libhidapi-hidraw0
+install_packages
 
 # ── 2. Build ──────────────────────────────────────────────────────────────────
 echo "[2/4] Building xinmeng_rgb binary…"
@@ -58,6 +74,7 @@ echo "║    ./xinmeng_rgb effect static --colour 255,0,0          ║"
 echo "║    ./xinmeng_rgb effect breathing --colour 0,128,255     ║"
 echo "║    ./xinmeng_rgb effect wave                             ║"
 echo "║    ./xinmeng_rgb effect off                              ║"
+echo "║    ./xinmeng_rgb music   # microphone-reactive mode      ║"
 echo "║    ./xinmeng_rgb guide   # USB capture guide             ║"
 echo "║                                                          ║"
 echo "╚══════════════════════════════════════════════════════════╝"

@@ -45,6 +45,7 @@ Then **log out and back in** (or reboot) so the `input` group change takes effec
 ./xinmeng_rgb effect wave                              # Rainbow wave
 ./xinmeng_rgb effect rainbow                           # Colour cycle
 ./xinmeng_rgb effect off                               # Lights off
+./xinmeng_rgb music                                    # Music reactive mode (mic input)
 ```
 
 ### 4. Interactive UI (full control)
@@ -90,6 +91,7 @@ g++ -std=c++17 -O2 xinmeng_rgb.cpp $(pkg-config --libs --cflags hidapi-hidraw) -
 ./xinmeng_rgb send "04 01 00 00 ff..." # Send raw 64-byte HID report
 ./xinmeng_rgb replay <json_file>       # Replay captured packets from JSON
 ./xinmeng_rgb guide                    # Show Windows USB capture guide
+./xinmeng_rgb music                    # Music reactive mode (Ctrl+C to stop)
 ```
 
 ---
@@ -194,8 +196,21 @@ Run `./xinmeng_rgb guide` for step-by-step instructions.
 | Library | Purpose | Install |
 |---------|---------|---------|
 | `libhidapi-hidraw0` | HID device communication | `sudo apt install libhidapi-hidraw0` |
+| `alsa-utils` | Microphone capture for `music` mode (`arecord`) | `sudo apt install alsa-utils` |
 
 The compiled binary is otherwise fully standalone — no Python, no virtual environment.
+
+---
+
+## Cross-distro package notes
+
+The installer now supports `apt`, `dnf`, `pacman`, and `zypper`.
+
+Manual package names if needed:
+- Debian/Ubuntu: `g++ make pkg-config libhidapi-dev libhidapi-hidraw0 alsa-utils`
+- Fedora: `gcc-c++ make pkgconf-pkg-config hidapi-devel alsa-utils`
+- Arch: `gcc make pkgconf hidapi alsa-utils`
+- openSUSE: `gcc-c++ make pkg-config hidapi-devel alsa-utils`
 
 ---
 

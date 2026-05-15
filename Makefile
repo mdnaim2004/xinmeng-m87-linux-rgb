@@ -8,8 +8,9 @@
 
 CXX      ?= g++
 CXXFLAGS  = -std=c++17 -O2 -Wall -Wextra
-LDFLAGS   = $(shell pkg-config --libs hidapi-hidraw 2>/dev/null || echo "-lhidapi-hidraw")
-CPPFLAGS  = $(shell pkg-config --cflags hidapi-hidraw 2>/dev/null || echo "-I/usr/include")
+HIDAPI_PKG = $(shell sh -c 'if pkg-config --exists hidapi-hidraw 2>/dev/null; then echo hidapi-hidraw; elif pkg-config --exists hidapi-libusb 2>/dev/null; then echo hidapi-libusb; elif pkg-config --exists hidapi 2>/dev/null; then echo hidapi; fi')
+LDFLAGS   = $(if $(strip $(HIDAPI_PKG)),$(shell pkg-config --libs $(HIDAPI_PKG)),-lhidapi-hidraw)
+CPPFLAGS  = $(if $(strip $(HIDAPI_PKG)),$(shell pkg-config --cflags $(HIDAPI_PKG)),-I/usr/include -I/usr/include/hidapi)
 
 TARGET  = xinmeng_rgb
 SRC     = xinmeng_rgb.cpp
