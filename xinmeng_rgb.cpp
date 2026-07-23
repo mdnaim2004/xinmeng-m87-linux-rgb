@@ -478,7 +478,7 @@ static std::vector<DeviceInfo> find_known_devices() {
         struct hid_device_info* best = nullptr;
         int best_iface = -1;
         for (struct hid_device_info* d = devs; d; d = d->next) {
-            if (d->usage_page == RGB_USAGE_PAGE) {
+            if (d->usage_page >= RGB_USAGE_PAGE) {
                 best = d;
                 break;
             }
