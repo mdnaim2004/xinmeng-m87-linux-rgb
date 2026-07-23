@@ -677,13 +677,7 @@ public:
         Report r = report;
         r.resize(HID_REPORT_SIZE, 0x00);
 
-        // Prepend a 0x00 byte so hidapi knows to use the report ID from the data.
-        // (Required on some Linux HID implementations.)
-        std::vector<uint8_t> buf;
-        buf.reserve(r.size() + 1);
-        buf.push_back(0x00);        // null report ID prefix
-        buf.insert(buf.end(), r.begin(), r.end());
-
+        std::vector<uint8_t> buf = r;
         int written = hid_write(dev_, buf.data(), buf.size());
         if (written < 0) {
             const wchar_t* err = hid_error(dev_);
