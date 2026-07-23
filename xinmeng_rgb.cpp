@@ -636,8 +636,7 @@ public:
 
         const char* best_path = nullptr;
         int best_iface = -1;
-        for (auto* d = devs; d; d = d->next) {
-            if (d->usage_page == RGB_USAGE_PAGE) {
+            if (d->usage_page >= RGB_USAGE_PAGE) {
                 best_path = d->path;
                 break;
             }
