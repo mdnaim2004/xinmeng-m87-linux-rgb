@@ -27,7 +27,253 @@
  *   sudo udevadm control --reload-rules && sudo udevadm trigger
  */
 
-#include <hidapi/hidapi.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+
+// ============================================================================
+// Custom HIDRAW Implementation (No external dependencies)
+// ============================================================================
+
+struct hid_device_info {
+    char *path;
+    unsigned short vendor_id;
+    unsigned short product_id;
+    wchar_t *serial_number;
+    unsigned short release_number;
+    wchar_t *manufacturer_string;
+    wchar_t *product_string;
+    unsigned short usage_page;
+    unsigned short usage;
+    int interface_number;
+    struct hid_device_info *next;
+};
+
+struct hid_device {
+    int fd;
+    mutable std::wstring last_error;
+};
+
+static wchar_t* string_to_wchar(const std::string& str) {
+    if (str.empty()) return nullptr;
+    wchar_t* ws = new wchar_t[str.size() + 1];
+    for (size_t i = 0; i < str.size(); i++) {
+        ws[i] = static_cast<wchar_t>(str[i]);
+    }
+    ws[str.size()] = L'\0';
+    return ws;
+}
+
+static bool parse_report_descriptor(const std::string& path, uint16_t& usage_page, uint16_t& usage) {
+    std::ifstream f(path, std::ios::binary);
+    if (!f) return false;
+    std::vector<uint8_t> desc((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
+    
+    usage_page = 0;
+    usage = 0;
+    bool found_page = false;
+    bool found_usage = false;
+    
+    size_t i = 0;
+    while (i < desc.size()) {
+        uint8_t header = desc[i];
+        uint8_t size = header & 0x03;
+        if (size == 3) size = 4;
+        uint8_t type = (header >> 2) & 0x03;
+        uint8_t tag = (header >> 4) & 0x0F;
+        
+        i++;
+        if (i + size > desc.size()) break;
+        
+        if (type == 1 && tag == 0) {
+            uint32_t val = 0;
+            for (size_t s = 0; s < size; s++) {
+                val |= (desc[i + s] << (s * 8));
+            }
+            if (!found_page) {
+                usage_page = val;
+                found_page = true;
+            }
+        }
+        else if (type == 2 && tag == 0) {
+            uint32_t val = 0;
+            for (size_t s = 0; s < size; s++) {
+                val |= (desc[i + s] << (s * 8));
+            }
+            if (!found_usage) {
+                usage = val;
+                found_usage = true;
+            }
+        }
+        
+        if (found_page && found_usage) {
+            return true;
+        }
+        
+        i += size;
+    }
+    return found_page;
+}
+
+static int hid_init() { return 0; }
+static int hid_exit() { return 0; }
+
+static void hid_free_enumeration(struct hid_device_info* devs) {
+    while (devs) {
+        struct hid_device_info* next = devs->next;
+        delete[] devs->path;
+        delete[] devs->serial_number;
+        delete[] devs->manufacturer_string;
+        delete[] devs->product_string;
+        delete devs;
+        devs = next;
+    }
+}
+
+static struct hid_device_info* hid_enumerate(unsigned short vendor_id, unsigned short product_id) {
+    struct hid_device_info* head = nullptr;
+    struct hid_device_info* tail = nullptr;
+
+    const std::string base_path = "/sys/class/hidraw";
+    if (!std::filesystem::exists(base_path)) return nullptr;
+
+    for (const auto& entry : std::filesystem::directory_iterator(base_path)) {
+        std::string filename = entry.path().filename().string();
+        if (filename.rfind("hidraw", 0) != 0) continue;
+
+        std::string uevent_path = entry.path().string() + "/device/uevent";
+        if (!std::filesystem::exists(uevent_path)) continue;
+
+        std::ifstream uf(uevent_path);
+        if (!uf) continue;
+
+        std::string line;
+        uint16_t dev_vid = 0;
+        uint16_t dev_pid = 0;
+        std::string dev_name;
+        
+        while (std::getline(uf, line)) {
+            if (line.rfind("HID_ID=", 0) == 0) {
+                std::string id_str = line.substr(7);
+                std::istringstream ss(id_str);
+                std::string bus_s, vid_s, pid_s;
+                if (std::getline(ss, bus_s, ':') && 
+                    std::getline(ss, vid_s, ':') && 
+                    std::getline(ss, pid_s, ':')) {
+                    try {
+                        dev_vid = static_cast<uint16_t>(std::stoul(vid_s, nullptr, 16));
+                        dev_pid = static_cast<uint16_t>(std::stoul(pid_s, nullptr, 16));
+                    } catch (...) {}
+                }
+            } else if (line.rfind("HID_NAME=", 0) == 0) {
+                dev_name = line.substr(9);
+            }
+        }
+
+        if (vendor_id != 0 && dev_vid != vendor_id) continue;
+        if (product_id != 0 && dev_pid != product_id) continue;
+
+        int iface_num = -1;
+        try {
+            std::string real_device_path = std::filesystem::canonical(entry.path().string() + "/device").string();
+            size_t colon_pos = real_device_path.rfind(':');
+            if (colon_pos != std::string::npos) {
+                size_t dot_pos = real_device_path.find('.', colon_pos);
+                if (dot_pos != std::string::npos && dot_pos > colon_pos + 1) {
+                    std::string iface_str = real_device_path.substr(colon_pos + 1, dot_pos - colon_pos - 1);
+                    iface_num = std::stoi(iface_str);
+                }
+            }
+        } catch (...) {}
+
+        uint16_t usage_page = 0;
+        uint16_t usage = 0;
+        std::string desc_path = entry.path().string() + "/device/report_descriptor";
+        parse_report_descriptor(desc_path, usage_page, usage);
+
+        struct hid_device_info* info = new struct hid_device_info;
+        std::string dev_node_path = "/dev/" + filename;
+        
+        info->path = new char[dev_node_path.size() + 1];
+        std::strcpy(info->path, dev_node_path.c_str());
+        
+        info->vendor_id = dev_vid;
+        info->product_id = dev_pid;
+        info->serial_number = nullptr;
+        info->release_number = 0;
+        info->manufacturer_string = string_to_wchar("Generic");
+        info->product_string = string_to_wchar(dev_name);
+        info->usage_page = usage_page;
+        info->usage = usage;
+        info->interface_number = iface_num;
+        info->next = nullptr;
+
+        if (!head) {
+            head = info;
+            tail = info;
+        } else {
+            tail->next = info;
+            tail = info;
+        }
+    }
+
+    return head;
+}
+
+static hid_device* hid_open_path(const char* path) {
+    int fd = open(path, O_RDWR | O_CLOEXEC);
+    if (fd < 0) return nullptr;
+
+    hid_device* dev = new hid_device;
+    dev->fd = fd;
+    return dev;
+}
+
+static void hid_close(hid_device* dev) {
+    if (dev) {
+        if (dev->fd >= 0) close(dev->fd);
+        delete dev;
+    }
+}
+
+static int hid_set_nonblocking(hid_device* dev, int nonblock) {
+    if (!dev || dev->fd < 0) return -1;
+    int flags = fcntl(dev->fd, F_GETFL, 0);
+    if (flags < 0) return -1;
+    if (nonblock) {
+        flags |= O_NONBLOCK;
+    } else {
+        flags &= ~O_NONBLOCK;
+    }
+    return fcntl(dev->fd, F_SETFL, flags);
+}
+
+static int hid_write(hid_device* dev, const unsigned char* data, size_t length) {
+    if (!dev || dev->fd < 0) return -1;
+    
+    int written;
+    if (data[0] == 0x00) {
+        written = write(dev->fd, data + 1, length - 1);
+    } else {
+        written = write(dev->fd, data, length);
+    }
+
+    if (written < 0) {
+        dev->last_error = L"Write failed";
+        return -1;
+    }
+    return written;
+}
+
+static const wchar_t* hid_error(hid_device* dev) {
+    if (dev) {
+        if (dev->last_error.empty()) return L"Success";
+        return dev->last_error.c_str();
+    }
+    return L"Unknown error";
+}
+
 
 #include <algorithm>
 #include <chrono>
