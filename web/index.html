@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xinmeng M87 Pro RGB Controller</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="glow-orb glow-1"></div>
+    <div class="glow-orb glow-2"></div>
+
+    <div class="container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="logo">
+                <span class="logo-icon">⌨️</span>
+                <h1>Xinmeng <span class="accent-text">RGB Control</span></h1>
+            </div>
+            <div class="device-badge" id="device-badge">
+                <span class="pulse-dot"></span>
+                <span id="device-name">Detecting...</span>
+            </div>
+        </header>
+
+        <!-- Main Dashboard Layout -->
+        <main class="dashboard-grid">
+            
+            <!-- Left Panel: Mode & Color Control -->
+            <section class="glass-card panel-control">
+                <div class="panel-header">
+                    <h2>Lighting Profile</h2>
+                    <p class="subtitle">Select effect and customize colors</p>
+                </div>
+
+                <div class="control-group">
+                    <label>Effect Mode</label>
+                    <div class="mode-grid">
+                        <button class="mode-btn active" data-mode="music">🎵 Music Sync</button>
+                        <button class="mode-btn" data-mode="static">🎨 Static Color</button>
+                        <button class="mode-btn" data-mode="breathing">🌬️ Breathing</button>
+                        <button class="mode-btn" data-mode="wave">🌊 Rainbow Wave</button>
+                        <button class="mode-btn" data-mode="neon">🌈 Neon Cycle</button>
+                        <button class="mode-btn" data-mode="ripple">💫 Key Ripple</button>
+                        <button class="mode-btn" data-mode="reactive">⚡ Key Reactive</button>
+                        <button class="mode-btn" data-mode="off">🔌 Turn Off</button>
+                    </div>
+                </div>
+
+                <div class="control-group" id="color-picker-group">
+                    <label>Custom Color</label>
+                    <div class="color-control-wrapper">
+                        <input type="color" id="color-picker" value="#00ff88">
+                        <div class="color-values">
+                            <span id="color-hex">#00ff88</span>
+                            <span id="color-rgb">RGB: 0, 255, 136</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <div class="slider-row">
+                        <label for="speed-slider">Animation Speed</label>
+                        <span class="slider-val" id="speed-val">2 (Medium)</span>
+                    </div>
+                    <input type="range" id="speed-slider" min="0" max="4" value="2" class="premium-slider">
+                    <div class="slider-labels">
+                        <span>Fastest</span>
+                        <span>Slowest</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Right Panel: Visualizer & Live Monitor -->
+            <section class="glass-card panel-visualizer">
+                <div class="panel-header">
+                    <h2>Audio Visualizer</h2>
+                    <p class="subtitle">Real-time desktop audio waveform and volume</p>
+                </div>
+
+                <!-- Live Visualizer Canvas -->
+                <div class="canvas-container">
+                    <canvas id="visualizer-canvas"></canvas>
+                    <div class="visualizer-overlay" id="visualizer-off-overlay">
+                        <span>Music Sync is inactive</span>
+                    </div>
+                </div>
+
+                <!-- Visualizer Settings -->
+                <div class="visualizer-settings">
+                    <div class="control-group">
+                        <div class="slider-row">
+                            <label for="gain-slider">Visualizer Sensitivity (Gain)</label>
+                            <span class="slider-val" id="gain-val">1.5x</span>
+                        </div>
+                        <input type="range" id="gain-slider" min="0.5" max="5.0" step="0.1" value="1.5" class="premium-slider">
+                    </div>
+
+                    <!-- Keyboard Status Preview -->
+                    <div class="keyboard-preview">
+                        <h3>Keyboard State</h3>
+                        <div class="preview-bar-container">
+                            <div class="preview-label">Live Beat Power:</div>
+                            <div class="progress-track">
+                                <div class="progress-bar" id="beat-bar"></div>
+                            </div>
+                        </div>
+                        <div class="preview-color-row">
+                            <span>Streaming Color:</span>
+                            <div class="color-swatch" id="color-swatch"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="app-footer">
+            <p>Xinmeng M87 Linux Controller • Zero-Dependency Web UI</p>
+        </footer>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
