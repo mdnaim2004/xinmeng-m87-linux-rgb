@@ -193,13 +193,12 @@ static struct hid_device_info* hid_enumerate(unsigned short vendor_id, unsigned 
 
         int iface_num = -1;
         try {
-            std::string real_device_path = std::filesystem::canonical(entry.path().string() + "/device").string();
-            size_t colon_pos = real_device_path.rfind(':');
-            if (colon_pos != std::string::npos) {
-                size_t dot_pos = real_device_path.find('.', colon_pos);
-                if (dot_pos != std::string::npos && dot_pos > colon_pos + 1) {
-                    std::string iface_str = real_device_path.substr(colon_pos + 1, dot_pos - colon_pos - 1);
-                    iface_num = std::stoi(iface_str);
+            std::string iface_path = entry.path().string() + "/device/../bInterfaceNumber";
+            if (std::filesystem::exists(iface_path)) {
+                std::ifstream iff(iface_path);
+                std::string iface_s;
+                if (std::getline(iff, iface_s)) {
+                    iface_num = std::stoi(iface_s);
                 }
             }
         } catch (...) {}

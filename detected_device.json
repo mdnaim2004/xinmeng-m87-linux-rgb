@@ -4,6 +4,6 @@
     "pid": 591,
     "name": "Xinmeng M87 Pro v2 (Apple mode)",
     "path": "/dev/hidraw6",
-    "interface": 24
+    "interface": 4
   }
 ]
