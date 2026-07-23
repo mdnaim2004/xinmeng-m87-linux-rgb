@@ -22,3 +22,7 @@ SUBSYSTEM=="usb",    ATTRS{idVendor}=="3151", GROUP="input", MODE="0660"
 # Apple VID 0x05ac PID 0x024f (for keyboards in Mac/Apple mode)
 SUBSYSTEM=="hidraw", ATTRS{idVendor}=="05ac", ATTRS{idProduct}=="024f", GROUP="input", MODE="0660"
 SUBSYSTEM=="usb",    ATTRS{idVendor}=="05ac", ATTRS{idProduct}=="024f", GROUP="input", MODE="0660"
+
+# Sonix VID 0x0c45 PID 0x8006 (for keyboard in wired mode)
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="0c45", ATTRS{idProduct}=="8006", GROUP="input", MODE="0660"
+SUBSYSTEM=="usb",    ATTRS{idVendor}=="0c45", ATTRS{idProduct}=="8006", GROUP="input", MODE="0660"
