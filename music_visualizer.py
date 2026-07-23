@@ -216,7 +216,9 @@ def apply_keyboard_settings(fd, mode, r, g, b, speed):
     if mode == 'music':
         # Music mode uses static template as base
         init_mode = build_report(CMD_SET_MODE, 0x00, [r, g, b])
+        brightness_report = build_report(CMD_SET_BRIGHTNESS, 0x00, [0x04])
         fd.write(init_mode)
+        fd.write(brightness_report)
         fd.write(commit_report)
     elif mode in MODE_MAP:
         hardware_mode = MODE_MAP[mode]
@@ -374,9 +376,11 @@ def main():
 
                 # Throttled write to keyboard (avoid USB queue clog)
                 now = time.time()
-                if now - last_update >= 0.025:
+                if now - last_update >= 0.08:
                     mode_report = build_report(CMD_SET_MODE, 0x00, [cr, cg, cb])
+                    brightness_report = build_report(CMD_SET_BRIGHTNESS, 0x00, [0x04])
                     fd.write(mode_report)
+                    fd.write(brightness_report)
                     fd.write(init_commit)
                     last_update = now
 
