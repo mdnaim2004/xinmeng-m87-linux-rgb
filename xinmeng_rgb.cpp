@@ -27,6 +27,23 @@
  *   sudo udevadm control --reload-rules && sudo udevadm trigger
  */
 
+#include <algorithm>
+#include <chrono>
+#include <cmath>
+#include <cstdint>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <filesystem>
+#include <fstream>
+#include <iomanip>
+#include <iostream>
+#include <optional>
+#include <sstream>
+#include <string>
+#include <thread>
+#include <vector>
+
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/stat.h>
@@ -274,23 +291,6 @@ static const wchar_t* hid_error(hid_device* dev) {
     return L"Unknown error";
 }
 
-
-#include <algorithm>
-#include <chrono>
-#include <cmath>
-#include <cstdint>
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
-#include <filesystem>
-#include <fstream>
-#include <iomanip>
-#include <iostream>
-#include <optional>
-#include <sstream>
-#include <string>
-#include <thread>
-#include <vector>
 
 // ============================================================================
 // Known VID / PID table
