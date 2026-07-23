@@ -63,6 +63,7 @@ static const KnownDevice KNOWN_DEVICES[] = {
     {0x258A, 0x00C7, "Xinmeng M87 variant"},
     {0x0416, 0xC343, "Xinmeng M87 (Generalplus)"},
     {0x3151, 0x0000, "Xinmeng M87 (generic VID 0x3151)"},
+    {0x05AC, 0x024F, "Xinmeng M87 Pro v2 (Apple mode)"},
 };
 static const size_t KNOWN_DEVICES_COUNT = sizeof(KNOWN_DEVICES) / sizeof(KNOWN_DEVICES[0]);
 
