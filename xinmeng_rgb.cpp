@@ -268,14 +268,10 @@ static int hid_set_nonblocking(hid_device* dev, int nonblock) {
 static int hid_write(hid_device* dev, const unsigned char* data, size_t length) {
     if (!dev || dev->fd < 0) return -1;
     
-    int written;
-    if (data[0] == 0x00) {
-        written = write(dev->fd, data + 1, length - 1);
-    } else {
-        written = write(dev->fd, data, length);
-    }
+    int written = write(dev->fd, data, length);
 
     if (written < 0) {
+        std::cerr << "[ERROR] Write failed: " << strerror(errno) << " (errno=" << errno << ")\n";
         dev->last_error = L"Write failed";
         return -1;
     }
