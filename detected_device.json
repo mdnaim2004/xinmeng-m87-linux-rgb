@@ -1,9 +1,9 @@
 [
   {
-    "vid": 3141,
-    "pid": 32774,
-    "name": "Xinmeng M87 Pro v2 (Wired mode)",
-    "path": "/dev/hidraw4",
-    "interface": 2
+    "vid": 1452,
+    "pid": 591,
+    "name": "Xinmeng M87 Pro v2 (Apple mode)",
+    "path": "/dev/hidraw6",
+    "interface": 4
   }
 ]
