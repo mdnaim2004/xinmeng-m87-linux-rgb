@@ -200,14 +200,15 @@ def get_keyboard_path():
     sys.exit(1)
 
 def build_report(cmd, sub, params=None):
-    report = bytearray(64)
-    report[0] = REPORT_ID
-    report[1] = cmd
-    report[2] = sub
+    report = bytearray(65)
+    report[0] = 0x00
+    report[1] = REPORT_ID
+    report[2] = cmd
+    report[3] = sub
     if params:
         for idx, val in enumerate(params):
-            if idx + 3 < 64:
-                report[idx + 3] = val
+            if idx + 4 < 65:
+                report[idx + 4] = val
     return report
 
 def apply_keyboard_settings(fd, mode, r, g, b, speed):
